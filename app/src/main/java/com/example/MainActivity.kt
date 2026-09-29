@@ -72,14 +72,21 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        // Safer on MIUI / Android 11 (Poco M2 etc.)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            try {
+                enableEdgeToEdge()
+            } catch (e: Exception) {
+                // ignore — fall back to normal system bars
+            }
+        }
 
         setContent {
             SpecBoardTheme(darkTheme = true) {
                 val snackbarHostState = remember { SnackbarHostState() }
                 var selectedTabIndex by remember { mutableIntStateOf(0) }
                 val currentTab = MainTab.entries[selectedTabIndex]
-
                 val phones by viewModel.phonesList.collectAsState()
                 val allBrands by viewModel.allBrands.collectAsState()
                 val searchQuery by viewModel.searchQuery.collectAsState()
