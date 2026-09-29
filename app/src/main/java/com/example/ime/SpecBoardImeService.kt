@@ -36,50 +36,76 @@ class SpecBoardImeService : InputMethodService(), LifecycleOwner, ViewModelStore
 
     override fun onCreate() {
         super.onCreate()
-        savedStateRegistryController.performRestore(null)
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        try {
+            savedStateRegistryController.performRestore(null)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        } catch (e: Exception) {
+            // ignore – prevents crash on some MIUI versions
+        }
     }
 
     override fun onCreateInputView(): View {
-        return ComposeView(this).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(this@SpecBoardImeService))
-            setViewTreeLifecycleOwner(this@SpecBoardImeService)
-            setViewTreeViewModelStoreOwner(this@SpecBoardImeService)
-            setViewTreeSavedStateRegistryOwner(this@SpecBoardImeService)
+        return try {
+            ComposeView(this).apply {
+                setViewCompositionStrategy(
+                    ViewCompositionStrategy.DisposeOnLifecycleDestroyed(this@SpecBoardImeService)
+                )
+                setViewTreeLifecycleOwner(this@SpecBoardImeService)
+                setViewTreeViewModelStoreOwner(this@SpecBoardImeService)
+                setViewTreeSavedStateRegistryOwner(this@SpecBoardImeService)
 
-            setContent {
-                SpecBoardTheme(darkTheme = true) {
-                    ImeKeyboardScreen(
-                        repository = (application as SpecBoardApplication).repository,
-                        onInsertText = { text -> insertText(text) },
-                        onBackspace = { handleBackspace() },
-                        onEnter = { handleEnter() },
-                        onSpace = { insertText(" ") },
-                        onSwitchIme = { switchIme() },
-                        onHideKeyboard = { requestHideSelf(0) },
-                        modifier = Modifier
-                    )
+                setContent {
+                    SpecBoardTheme(darkTheme = true) {
+                        ImeKeyboardScreen(
+                            repository = (application as SpecBoardApplication).repository,
+                            onInsertText = { text -> insertText(text) },
+                            onBackspace = { handleBackspace() },
+                            onEnter = { handleEnter() },
+                            onSpace = { insertText(" ") },
+                            onSwitchIme = { switchIme() },
+                            onHideKeyboard = { requestHideSelf(0) },
+                            modifier = Modifier
+                        )
+                    }
                 }
+            }
+        } catch (e: Exception) {
+            // Fallback so the IME never hard-crashes the system keyboard
+            android.widget.TextView(this).apply {
+                text = "SpecBoard IME error"
+                setPadding(32, 32, 32, 32)
             }
         }
     }
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        try {
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        } catch (e: Exception) {
+            // ignore
+        }
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+        try {
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+        } catch (e: Exception) {
+            // ignore
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        store.clear()
+        try {
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            store.clear()
+        } catch (e: Exception) {
+            // ignore
+        }
     }
 
     private fun insertText(text: String) {
