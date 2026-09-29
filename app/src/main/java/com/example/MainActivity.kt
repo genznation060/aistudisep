@@ -3,7 +3,6 @@ package com.example
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -73,14 +72,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Safer on MIUI / Android 11 (Poco M2 etc.)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            try {
-                enableEdgeToEdge()
-            } catch (e: Exception) {
-                // ignore — fall back to normal system bars
-            }
-        }
+        // enableEdgeToEdge() removed – causes crashes on many MIUI / Android 11 devices
 
         setContent {
             SpecBoardTheme(darkTheme = true) {
